@@ -12,6 +12,7 @@
 #include <QtCore/QLoggingCategory>
 #include <QtCore/QObject>
 #include <QtQmlIntegration/QtQmlIntegration>
+//#include "LogDownloadController.h"             //
 
 Q_DECLARE_LOGGING_CATEGORY(LogDownloadControllerLog)
 
@@ -26,13 +27,16 @@ class LogDownloadTest;
 class LogDownloadController : public QObject
 {
     Q_OBJECT
-    // QML_ELEMENT
-    // QML_SINGLETON
+    //QML_ELEMENT   //
+    //QML_SINGLETON //
     Q_MOC_INCLUDE("Vehicle.h")
     Q_MOC_INCLUDE("QmlObjectListModel.h")
     Q_PROPERTY(QmlObjectListModel *model          READ _getModel            CONSTANT)
     Q_PROPERTY(bool               requestingList  READ _getRequestingList   NOTIFY requestingListChanged)
     Q_PROPERTY(bool               downloadingLogs READ _getDownloadingLogs  NOTIFY downloadingLogsChanged)
+
+    Q_PROPERTY(LogDownloadController* logDownloadController READ logDownloadController CONSTANT)  //
+    LogDownloadController* logDownloadController() { return LogDownloadController::instance(); }  //
 
     friend class LogDownloadTest;
 
@@ -46,6 +50,7 @@ public:
     Q_INVOKABLE void download(const QString &path = QString());
     Q_INVOKABLE void eraseAll();
     Q_INVOKABLE void cancel();
+    Q_INVOKABLE void downloadLatestLog();    //definicja funkcji do zapisania ostatniego logu
 
 signals:
     void requestingListChanged();
@@ -57,6 +62,8 @@ private slots:
     void _logEntry(uint32_t time_utc, uint32_t size, uint16_t id, uint16_t num_logs, uint16_t last_log_num);
     void _logData(uint32_t ofs, uint16_t id, uint8_t count, const uint8_t *data);
     void _processDownload();
+    void _findAndDownloadLatestLog();  //definicja mojej funkcji pomocniczej
+    void _requestLogList(uint32_t start, uint32_t end);   //przenioslem z dolu
 
 private:
     QmlObjectListModel *_getModel() const { return _logEntriesModel; }
@@ -73,7 +80,7 @@ private:
     void _receivedAllData();
     void _receivedAllEntries();
     void _requestLogData(uint16_t id, uint32_t offset, uint32_t count, int retryCount = 0);
-    void _requestLogList(uint32_t start, uint32_t end);
+    //void _requestLogList(uint32_t start, uint32_t end);   //przenioslem do gory
     void _requestLogEnd();
     void _resetSelection(bool canceled = false);
     void _setDownloading(bool active);

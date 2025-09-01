@@ -364,6 +364,14 @@ ApplicationWindow {
                             }
                         }
 
+                        //moj  testowy przycisk, ktory nic nie robi   DO USUNIECIA
+                        // SubMenuButton {
+                        //     id:               testButton
+                        //     Layout.fillWidth: true
+                        //     text: qsTr("Hello")
+                        //     imageResource:  "/qmlimages/Gears.svg"
+                        // }
+
                         SubMenuButton {
                             id:                 setupButton
                             height:             toolSelectDialog._toolButtonHeight
@@ -407,6 +415,14 @@ ApplicationWindow {
                                 }
                             }
                         }
+
+                        //moj  testowy przycisk, ktory nic nie robi    DO USUNIECIA
+                        // SubMenuButton {
+                        //     id:               lUkasz
+                        //     Layout.fillWidth: true
+                        //     text: qsTr("test")
+                        //     imageResource:  "/qmlimages/Gears.svg"
+                        // }
 
                         ColumnLayout {
                             width:                  innerLayout.width

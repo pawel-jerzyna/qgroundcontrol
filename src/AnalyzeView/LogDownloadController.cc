@@ -22,6 +22,9 @@
 #include <QtCore/qapplicationstatic.h>
 #include <QtCore/QTimer>
 
+#include "SettingsManager.h"   //
+#include <QDebug>              //
+
 QGC_LOGGING_CATEGORY(LogDownloadControllerLog, "qgc.analyzeview.logdownloadcontroller")
 
 Q_APPLICATION_STATIC(LogDownloadController, _logDownloadControllerInstance);
@@ -646,3 +649,69 @@ void LogDownloadController::_setListing(bool active)
         emit requestingListChanged();
     }
 }
+
+// ETAP 1: Funkcja wywoływana po kliknięciu Twojego przycisku "Download"
+void LogDownloadController::downloadLatestLog()
+{
+    if (_downloadingLogs || _requestingLogEntries) {
+        // Zabezpieczenie, jeśli proces już trwa
+        qgcApp()->showAppMessage(tr("Log download or list request already in progress."));
+        return;
+    }
+
+            // Podłączamy nasz slot do sygnału, który informuje o ZMIANIE STANU proszenia o logi.
+            // Nasz slot (_findAndDownloadLatestLog) będzie teraz czekał na zakończenie odświeżania.
+    connect(this, &LogDownloadController::requestingListChanged, this, &LogDownloadController::_findAndDownloadLatestLog);
+
+            // Rozpoczynamy odświeżanie listy logów (tak jak domyślny przycisk "Refresh")
+    refresh();
+}
+
+// ETAP 2: Poprawiona funkcja, która zadziała poprawnie
+void LogDownloadController::_findAndDownloadLatestLog()
+{
+    if (_requestingLogEntries) {
+        return;
+    }
+    disconnect(this, &LogDownloadController::requestingListChanged, this, &LogDownloadController::_findAndDownloadLatestLog);
+
+    if (_logEntriesModel->count() == 0) {
+        qgcApp()->showAppMessage(tr("No logs found on vehicle after refresh."));
+        return;
+    }
+
+            // ================== POCZĄTEK KLUCZOWEJ ZMIANY ==================
+
+            // Zamiast śledzić ID, będziemy śledzić wskaźnik do najnowszego wpisu.
+            // Na początku nie mamy żadnego, więc jest nullptr.
+    QGCLogEntry* latestLogEntry = nullptr;
+
+    for (int i = 0; i < _logEntriesModel->count(); ++i) {
+        if (auto entry = qobject_cast<QGCLogEntry*>(_logEntriesModel->get(i))) {
+            // Nowa, uproszczona logika porównania:
+            // 1. Jeśli `latestLogEntry` jest wciąż nullptr (pierwsza iteracja),
+            //    ten wpis staje się najnowszym.
+            // 2. W kolejnych iteracjach, porównujemy ID bieżącego wpisu z ID
+            //    dotychczas najnowszego.
+            if (!latestLogEntry || entry->id() > latestLogEntry->id()) {
+                latestLogEntry = entry;
+            }
+        }
+    }
+
+    // ================== KONIEC KLUCZOWEJ ZMIANY ==================
+
+    if (latestLogEntry) {
+        qgcApp()->showAppMessage(QString(tr("Found latest log: #%1. Starting download.")).arg(latestLogEntry->id()));
+
+        // Zaznaczamy tylko ten jeden log do pobrania
+        latestLogEntry->setSelected(true);
+
+        download();
+
+    } else {
+        qgcApp()->showAppMessage(tr("Could not identify the latest log."));
+    }
+}
+
+

@@ -19,6 +19,7 @@ import QGroundControl.MultiVehicleManager
 import QGroundControl.ScreenTools
 import QGroundControl.Controllers
 
+
 Rectangle {
     id:     _root
     width:  parent.width
@@ -82,6 +83,17 @@ Rectangle {
             onClicked:          _activeVehicle.closeVehicle()
             visible:            _activeVehicle && _communicationLost
         }
+
+        // moj przycisk od pobierania ostatniego loga - pozniej zmienc miejsce
+        QGCButton {
+            id:                    instandDownloadLastLog
+            icon.source:            "/res/QGCLogoFull.svg"
+            text:       qsTr("Download")
+            onClicked: {
+                // Tutaj wywołamy nową funkcję z logiką
+                logDownloadController.downloadLatestLog()
+            }
+        }
     }
 
     QGCFlickable {
@@ -98,6 +110,7 @@ Rectangle {
 
         FlyViewToolBarIndicators { id: toolIndicators }
     }
+
 
     //-------------------------------------------------------------------------
     //-- Branding Logo
